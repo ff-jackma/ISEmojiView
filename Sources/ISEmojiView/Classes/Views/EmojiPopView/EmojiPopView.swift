@@ -56,7 +56,15 @@ internal class EmojiPopView: UIView {
         
         return result
     }
-    
+
+    override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
+        super.traitCollectionDidChange(previousTraitCollection)
+        if previousTraitCollection?.userInterfaceStyle != traitCollection.userInterfaceStyle {
+            setupUI()
+            self.isHidden = false
+        }
+    }
+
     // MARK: - Internal functions
     
     internal func move(location: CGPoint, animation: Bool = true) {
@@ -81,7 +89,7 @@ internal class EmojiPopView: UIView {
     
     internal func setEmoji(_ emoji: Emoji) {
         self.currentEmoji = emoji.emoji
-        self.emojiArray = emoji.emojis
+        self.emojiArray = Array(emoji.emojis.prefix(7))
     }
     
 }
@@ -127,13 +135,22 @@ extension EmojiPopView {
         
         // path
         let path = maskPath()
-        
+
+        let color = UIColor { traitCollection in
+            switch traitCollection.userInterfaceStyle {
+                case .dark:
+                    return .black
+                default:
+                    return .white
+            }
+        }
+
         // border
         let borderLayer = CAShapeLayer()
         borderLayer.path = path
-        borderLayer.strokeColor = UIColor(white: 0.8, alpha: 1).cgColor
-        borderLayer.fillColor = UIColor.white.cgColor
-        borderLayer.lineWidth = 1
+        borderLayer.strokeColor = UIColor.white.cgColor
+        borderLayer.fillColor = color.cgColor
+        borderLayer.lineWidth = 0
         layer.addSublayer(borderLayer)
         
         // mask
@@ -143,13 +160,20 @@ extension EmojiPopView {
         // content layer
         let contentLayer = CALayer()
         contentLayer.frame = bounds
-        contentLayer.backgroundColor = UIColor.white.cgColor
+        contentLayer.backgroundColor = color.cgColor
         contentLayer.mask = maskLayer
         layer.addSublayer(contentLayer)
         
         emojisView.removeFromSuperview()
-        emojisView = UIView(frame: CGRect(x: emojisX + 8, y: 10, width: CGFloat(emojiArray.count) * EmojiSize.width, height: EmojiSize.height))
-        
+        emojisView = UIView(
+            frame: CGRect(
+                x: emojisX + 8,
+                y: PartSpacing * 2.0,
+                width: CGFloat(emojiArray.count) * EmojiSize.width,
+                height: EmojiSize.height
+            )
+        )
+
         // add buttons
         emojiButtons = []
         for emoji in emojiArray {
@@ -165,25 +189,25 @@ extension EmojiPopView {
         let path = CGMutablePath()
         
         path.addRoundedRect(
-                 in: CGRect(
-                     x: emojisX,
-                     y: 0.0,
-                     width: emojisWidth,
-                     height: TopPartSize.height
-                 ),
-                 cornerWidth: 10,
-                 cornerHeight: 10
-             )
+             in: CGRect(
+                 x: emojisX,
+                 y: PartSpacing,
+                 width: emojisWidth,
+                 height: TopPartSize.height
+             ),
+             cornerWidth: 4,
+             cornerHeight: 4
+         )
 
         path.addRoundedRect(
             in: CGRect(
                 x: TopPartSize.width / 2.0 - BottomPartSize.width / 2.0,
-                y: TopPartSize.height - 10,
+                y: TopPartSize.height,
                 width: BottomPartSize.width,
-                height: BottomPartSize.height + 10
+                height: BottomPartSize.height + PartSpacing
             ),
-            cornerWidth: 5,
-            cornerHeight: 5
+            cornerWidth: 4,
+            cornerHeight: 4
         )
         
         return path

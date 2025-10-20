@@ -75,8 +75,12 @@ final public class EmojiView: UIView {
     
     public weak var delegate: EmojiViewDelegate?
 
-    public func updateRecentsEmojis() {
+    public func willShow() {
         emojiCollectionView?.updateRecentsEmojis(RecentEmojisManager.sharedInstance.recentEmojis())
+    }
+
+    public func willDismiss() {
+        emojiCollectionView?.dismissPopView()
     }
 
     // MARK: - Private variables
@@ -241,7 +245,8 @@ extension EmojiView {
         emojiCollectionView.delegate = self
         emojiCollectionView.translatesAutoresizingMaskIntoConstraints = false
         addSubview(emojiCollectionView)
-        
+        emojiCollectionView.setupPopView()
+
         self.emojiCollectionView = emojiCollectionView
     }
     
