@@ -74,7 +74,11 @@ final public class EmojiView: UIView {
     // MARK: - Public variables
     
     public weak var delegate: EmojiViewDelegate?
-    
+
+    public func updateRecentsEmojis() {
+        emojiCollectionView?.updateRecentsEmojis(RecentEmojisManager.sharedInstance.recentEmojis())
+    }
+
     // MARK: - Private variables
     
     private weak var bottomContainerView: UIView?
@@ -160,7 +164,11 @@ final public class EmojiView: UIView {
 extension EmojiView: EmojiCollectionViewDelegate {
     
     func emojiViewDidSelectEmoji(emojiView: EmojiCollectionView, emoji: Emoji, selectedEmoji: String) {
-        if RecentEmojisManager.sharedInstance.add(emoji: emoji, selectedEmoji: selectedEmoji, maxCount: countOfRecentsEmojis),(keyboardSettings?.updateRecentEmojiImmediately) ?? true  {
+        // Add to recents emojis, may fail
+        let addResult = RecentEmojisManager.sharedInstance.add(emoji: emoji, selectedEmoji: selectedEmoji, maxCount: countOfRecentsEmojis)
+        // Update recents emojis immediately based on settings
+        let updateRecent = keyboardSettings?.updateRecentEmojiImmediately ?? true
+        if addResult == true, updateRecent == true  {
             emojiCollectionView?.updateRecentsEmojis(RecentEmojisManager.sharedInstance.recentEmojis())
         }
         

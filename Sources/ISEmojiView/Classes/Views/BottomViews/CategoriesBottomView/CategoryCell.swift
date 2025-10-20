@@ -9,16 +9,52 @@ import Foundation
 import UIKit
 
 private let HighlightedBackgroundViewSize = CGFloat(30)
-private let ImageActiveTintColor = UIColor(red: 95/255, green: 94/255, blue: 95/255, alpha: 1)
-private let ImageNonActiveTintColor = UIColor(red: 161/255, green: 165/255, blue: 172/255, alpha: 1)
+//private let ImageActiveTintColor = UIColor(red: 95/255, green: 94/255, blue: 95/255, alpha: 1)
+//private let ImageNonActiveTintColor = UIColor(red: 161/255, green: 165/255, blue: 172/255, alpha: 1)
 
 internal class CategoryCell: UICollectionViewCell {
     
     // MARK: - Private variables
-    
+
+    private var ImageNonActiveTintColor: UIColor {
+        return UIColor { traitCollection in
+            switch traitCollection.userInterfaceStyle {
+                case .dark:
+                    // rgba(112, 113, 116, 1)
+                    return UIColor(red: 112/255, green: 113/255, blue: 116/255, alpha: 1)
+                default:
+                    // rgba(161, 165, 172, 1)
+                    return UIColor(red: 161/255, green: 165/255, blue: 172/255, alpha: 1)
+            }
+        }
+    }
+
+    private var ImageActiveTintColor: UIColor {
+        return UIColor { traitCollection in
+            switch traitCollection.userInterfaceStyle {
+                case .dark:
+                    // rgba(137, 138, 141, 1)
+                    return UIColor(red: 137/255, green: 138/255, blue: 141/255, alpha: 1)
+                default:
+                    // rgba(95, 94, 95, 1)
+                    return UIColor(red: 95/255, green: 94/255, blue: 95/255, alpha: 1)
+            }
+        }
+    }
+
     private var highlightedBackgroundView: UIView = {
         let view = UIView()
-        view.backgroundColor = UIColor(red: 201/255, green: 206/255, blue: 214/255, alpha: 1)
+        let colorAsset = UIColor { traitCollection in
+            switch traitCollection.userInterfaceStyle {
+            case .dark:
+                // rgba(67, 67, 67, 1)
+                return UIColor(red: 67/255, green: 67/255, blue: 67/255, alpha: 1)
+            default:
+                // rgba(201, 206, 214, 1)
+                return UIColor(red: 201/255, green: 206/255, blue: 214/255, alpha: 1)
+            }
+        }
+        view.backgroundColor = colorAsset
         view.isHidden = true
         return view
     }()
@@ -69,7 +105,7 @@ internal class CategoryCell: UICollectionViewCell {
         
         emojiImageView.frame = contentView.bounds
     }
-    
+
     // MARK: - Internal functions
     
     internal func setEmojiCategory(_ category: Category) {

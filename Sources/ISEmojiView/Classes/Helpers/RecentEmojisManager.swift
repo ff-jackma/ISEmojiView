@@ -38,8 +38,8 @@ final public class RecentEmojisManager {
         }
         
         guard emojis.firstIndex(of: emoji) == nil else {
-                UserDefaults.standard.set(freqData, forKey: recentEmojisFreqStorageKey)
-                return true
+            UserDefaults.standard.set(freqData, forKey: recentEmojisFreqStorageKey)
+            return true
         }
 
         if emojis.count > maxCount {
