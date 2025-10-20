@@ -17,11 +17,14 @@ final public class EmojiLoader {
     }
     
     public static func emojiCategories() -> [EmojiCategory] {
-        var emojiPListFileName = "ISEmojiList_iOS10";
-        if #available(iOS 11.0, *) { emojiPListFileName = "ISEmojiList_iOS11" }
-        if #available(iOS 12.1, *) { emojiPListFileName = "ISEmojiList_iOS12.1" }
-        if #available(iOS 18.0, *) { emojiPListFileName = "ISEmojiList" }
-        
+        var emojiPListFileName = "ISEmojiList_iOS15.0";
+        if #available(iOS 18.0, *) {
+            emojiPListFileName = "ISEmojiList_iOS18.0"
+        }
+        if #available(iOS 26.0, *) {
+            emojiPListFileName = "ISEmojiList_iOS26.0"
+        }
+
         guard let filePath = Bundle.podBundle.path(forResource: emojiPListFileName, ofType: "plist") else {
             return []
         }
