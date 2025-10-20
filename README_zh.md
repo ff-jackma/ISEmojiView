@@ -117,6 +117,51 @@ func emojiViewDidPressDismissKeyboardButton(_ emojiView: EmojiView) {
 - `needToShowAbcButton` - 是否展示切换键盘按钮。这个按钮在 `Categories` 底部视图。
 
 
+## 更新 Emoji 资源
+
+ISEmojiView 使用 plist 文件存储 Emoji 数据。当 Unicode 联盟发布新版本的 Emoji 时，你可以使用提供的 Python 脚本来生成更新的 plist 文件。
+
+### 步骤：
+
+1. 从 [Unicode Emoji Test Data](https://unicode.org/Public/emoji/) 下载最新的 `emoji-test.txt` 文件（例如 15.0、16.0 等版本）
+
+2. 运行 `build_emoji_plist_groups.py` 脚本：
+
+```bash
+cd Sources/ISEmojiView/Assets
+python3 build_emoji_plist_groups.py \
+  --emoji-test /path/to/emoji-test.txt \
+  --out ISEmojiList_iOS26.0.plist
+```
+
+3. 脚本会自动：
+   - 解析 emoji-test.txt 文件
+   - 将 Emoji 分组到预定义的类别（笑脸与人物、动物与自然、食物与饮料等）
+   - 聚合肤色变体（例如 👋、👋🏻、👋🏼 等会被组合在一起）
+   - 生成符合 ISEmojiView 格式的 plist 文件
+
+4. 将生成的 plist 文件添加到项目中，并在代码中使用新的 Emoji 列表
+
+### 脚本说明：
+
+`build_emoji_plist_groups.py` 支持以下参数：
+- `--emoji-test`：必需，指向 Unicode emoji-test.txt 文件的路径
+- `--out`：必需，输出 plist 文件的路径
+
+生成的 plist 格式为：
+```
+[
+  {
+    "title": "Smileys & People",
+    "emojis": ["😀", ["👋", "👋🏻", "👋🏼", "👋🏽", "👋🏾", "👋🏿"], ...]
+  },
+  ...
+]
+```
+
+其中，单个字符串表示无肤色变体的 Emoji，数组表示带有肤色变体的 Emoji 集合。
+
+
 ## 其他
 
 如果你在找一个关于 React Native 的实现，可以参考 [brendan-rius/react-native-emoji-keyboard](https://github.com/brendan-rius/react-native-emoji-keyboard)，也是基于本项目开发。

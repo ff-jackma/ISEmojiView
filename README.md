@@ -137,6 +137,50 @@ EmojiView_SwiftUI()
 
 `countOfRecentsEmojis`, `needToShowAbcButton`, `needToShowDeleteButton`, `updateRecentEmojiImmediately` can be passed to EmojiView_SwiftUI as parameters.
 
+## Updating Emoji Resources
+
+ISEmojiView uses plist files to store Emoji data. When Unicode Consortium releases new versions of Emoji, you can use the provided Python script to generate updated plist files.
+
+### Steps:
+
+1. Download the latest `emoji-test.txt` file from [Unicode Emoji Test Data](https://unicode.org/Public/emoji/) (e.g., version 15.0, 16.0, etc.)
+
+2. Run the `build_emoji_plist_groups.py` script:
+
+```bash
+cd Sources/ISEmojiView/Assets
+python3 build_emoji_plist_groups.py \
+  --emoji-test /path/to/emoji-test.txt \
+  --out ISEmojiList_iOS26.0.plist
+```
+
+3. The script will automatically:
+   - Parse the emoji-test.txt file
+   - Group emojis into predefined categories (Smileys & People, Animals & Nature, Food & Drink, etc.)
+   - Cluster skin tone variants (e.g., 👋, 👋🏻, 👋🏼 will be grouped together)
+   - Generate a plist file in ISEmojiView format
+
+4. Add the generated plist file to your project and use the new emoji list in your code
+
+### Script Details:
+
+`build_emoji_plist_groups.py` supports the following arguments:
+- `--emoji-test`: Required, path to the Unicode emoji-test.txt file
+- `--out`: Required, output path for the plist file
+
+The generated plist format:
+```
+[
+  {
+    "title": "Smileys & People",
+    "emojis": ["😀", ["👋", "👋🏻", "👋🏼", "👋🏽", "👋🏾", "👋🏿"], ...]
+  },
+  ...
+]
+```
+
+Where a single string represents an emoji without skin tone variants, and an array represents a collection of emojis with skin tone variants.
+
 ## Others
 
 If you are looking for a React Native solution, take a look at this [brendan-rius/react-native-emoji-keyboard](https://github.com/brendan-rius/react-native-emoji-keyboard)
