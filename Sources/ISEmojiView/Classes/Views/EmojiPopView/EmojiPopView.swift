@@ -26,11 +26,21 @@ internal class EmojiPopView: UIView {
     internal var emojiArray: [String] = []
     
     // MARK: - Private variables
-    
+
+    private let EmojisDisplayMaxCount: Int = 7
+    private var EmojisViewMaxWidth: CGFloat {
+        return EmojiSize.width * CGFloat(EmojisDisplayMaxCount)
+    }
+
     private var locationX: CGFloat = 0.0
     
     private var emojiButtons: [UIButton] = []
-    private var emojisView: UIView = UIView()
+    private lazy var emojisView: UIScrollView = {
+        let view = UIScrollView()
+        view.showsHorizontalScrollIndicator = false
+        view.showsVerticalScrollIndicator = false
+        return view
+    }()
 
     private var emojisX: CGFloat = 0.0
     private var emojisWidth: CGFloat = 0.0
@@ -149,20 +159,26 @@ extension EmojiPopView {
         isHidden = true
         
         self.layer.sublayers?.forEach { $0.removeFromSuperlayer() }
-        
-        // adjust location of emoji bar if it is off the screen
-        emojisWidth = TopPartSize.width + EmojiSize.width * CGFloat(emojiArray.count - 1)
-        emojisX = 0.0 // the x adjustment within the popView to account for the shift in location
-        let screenWidth = UIScreen.main.bounds.width
-        if emojisWidth + locationX > screenWidth {
-            emojisX = -CGFloat(emojisWidth + locationX - screenWidth + 8) // 8 for padding to border
+
+        if emojiArray.count == 1 {
+            emojisWidth = TopPartSize.width
+            emojisX = (TopPartSize.width - EmojiSize.width) / 2.0
+        } else {
+            emojisWidth = min(EmojisViewMaxWidth, CGFloat(emojiArray.count) * EmojiSize.width)
+
+            // adjust location of emoji bar if it is off the screen
+            emojisX = 0.0 // the x adjustment within the popView to account for the shift in location
+            let screenWidth = UIScreen.main.bounds.width
+            if emojisWidth + locationX > screenWidth {
+                emojisX = -CGFloat(emojisWidth + locationX - screenWidth + 8) // 8 for padding to border
+            }
+            // readjust in case someone is long-pressing right at the edge of the screen
+            let halfWidth = TopPartSize.width / 2.0 - BottomPartSize.width / 2.0
+            if emojisX + emojisWidth < halfWidth + BottomPartSize.width {
+                emojisX += (halfWidth + BottomPartSize.width) - (emojisX + emojisWidth)
+            }
         }
-        // readjust in case someone is long-pressing right at the edge of the screen
-        let halfWidth = TopPartSize.width / 2.0 - BottomPartSize.width / 2.0
-        if emojisX + emojisWidth < halfWidth + BottomPartSize.width {
-            emojisX += (halfWidth + BottomPartSize.width) - (emojisX + emojisWidth)
-        }
-        
+
         // path
         let path = maskPath()
 
@@ -195,14 +211,19 @@ extension EmojiPopView {
         layer.addSublayer(contentLayer)
         
         emojisView.removeFromSuperview()
-        emojisView = UIView(
-            frame: CGRect(
-                x: emojisX + 8,
-                y: PartSpacing * 2.0,
-                width: CGFloat(emojiArray.count) * EmojiSize.width,
-                height: EmojiSize.height
-            )
+        emojisView.frame = CGRect(
+            x: emojisX,
+            y: PartSpacing * 2.0,
+            width: emojisWidth,
+            height: EmojiSize.height
         )
+        emojisView.contentSize = CGSize(
+            width: CGFloat(emojiArray.count) * EmojiSize.width,
+            height: EmojiSize.height
+        )
+        emojisView.contentOffset = .zero
+
+        emojisView.subviews.forEach { $0.removeFromSuperview() }
 
         // add buttons
         emojiButtons = []
@@ -217,10 +238,14 @@ extension EmojiPopView {
     
     func maskPath() -> CGMutablePath {
         let path = CGMutablePath()
-        
+
+        var x = emojisX
+        if emojiArray.count == 1 {
+            x = 0
+        }
         path.addRoundedRect(
              in: CGRect(
-                 x: emojisX,
+                 x: x,
                  y: PartSpacing,
                  width: emojisWidth,
                  height: TopPartSize.height
