@@ -74,10 +74,6 @@ internal class EmojiCollectionView: UIView {
 
     // MARK: - Public
 
-    public func setupPopView() {
-        superview?.addSubview(emojiPopView)
-    }
-
     public func popPreviewShowing() -> Bool {
         return !self.emojiPopView.isHidden;
     }
@@ -265,6 +261,8 @@ extension EmojiCollectionView {
     private func setupView() {
         let emojiLongPressGestureRecognizer = UILongPressGestureRecognizer(target: self, action: #selector(emojiLongPressHandle))
         addGestureRecognizer(emojiLongPressGestureRecognizer)
+
+        addSubview(emojiPopView)
     }
 
     @objc private func emojiLongPressHandle(sender: UILongPressGestureRecognizer) {
@@ -273,7 +271,9 @@ extension EmojiCollectionView {
             return edgeRect.contains(location)
         }
 
-        guard isShowPopPreview else { return }
+        guard isShowPopPreview else {
+            return
+        }
 
         let location = sender.location(in: collectionView)
 
@@ -298,15 +298,16 @@ extension EmojiCollectionView {
             return
         }
 
+        // Return if the same emoji is already shown
+        guard emojiPopView.needRefreshEmoji(emoji) else {
+            return
+        }
+
         emojiPopView.setEmoji(emoji)
 
         let cellRect = attr.frame
         let cellFrameInSuperView = collectionView.convert(cellRect, to: self)
-        let emojiPopLocation = CGPoint(
-            x: cellFrameInSuperView.origin.x - ((TopPartSize.width - BottomPartSize.width) / 2.0) + PartSpacing * 2.0,
-            y: cellFrameInSuperView.origin.y - TopPartSize.height - PartSpacing * 2.0
-        )
-        emojiPopView.move(location: emojiPopLocation, animation: sender.state != .began)
+        emojiPopView.move(emojiFrame: cellFrameInSuperView, animation: sender.state != .began)
     }
 
     private func dismissPopView(_ usePopViewEmoji: Bool) {

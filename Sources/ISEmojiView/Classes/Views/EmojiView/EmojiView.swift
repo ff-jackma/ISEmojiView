@@ -245,7 +245,6 @@ extension EmojiView {
         emojiCollectionView.delegate = self
         emojiCollectionView.translatesAutoresizingMaskIntoConstraints = false
         addSubview(emojiCollectionView)
-        emojiCollectionView.setupPopView()
 
         self.emojiCollectionView = emojiCollectionView
     }
