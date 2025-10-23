@@ -128,7 +128,7 @@ internal class EmojiCollectionView: UIView {
         }
 
         let indexPath = IndexPath(item: 0, section: section)
-        collectionView.scrollToItem(at: indexPath, at: .left, animated: true)
+        collectionView.scrollToItem(at: indexPath, at: .left, animated: false)
     }
 
 }
