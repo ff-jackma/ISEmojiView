@@ -26,29 +26,23 @@ internal class EmojiPopView: UIView {
     internal var emojiArray: [String] = []
     
     // MARK: - Private variables
-
+    
     private let EmojisDisplayMaxCount: Int = 7
     private var EmojisViewMaxWidth: CGFloat {
         return EmojiSize.width * CGFloat(EmojisDisplayMaxCount)
     }
-
-    private var locationX: CGFloat = 0.0
+    
+    var locationX: CGFloat = 0.0
     
     private var emojiButtons: [UIButton] = []
-    private lazy var emojisView: UIScrollView = {
-        let view = UIScrollView()
-        view.showsHorizontalScrollIndicator = false
-        view.showsVerticalScrollIndicator = false
-        return view
-    }()
-
     private var emojisX: CGFloat = 0.0
     private var emojisWidth: CGFloat = 0.0
-
+    
     // MARK: - Init functions
     
     init() {
         super.init(frame: CGRect(x: 0, y: 0, width: EmojiPopViewSize.width, height: EmojiPopViewSize.height))
+        setupEmojisView()
     }
     
     required init?(coder aDecoder: NSCoder) {
@@ -66,100 +60,28 @@ internal class EmojiPopView: UIView {
         
         return result
     }
-
+    
     override func traitCollectionDidChange(_ previousTraitCollection: UITraitCollection?) {
         super.traitCollectionDidChange(previousTraitCollection)
         if previousTraitCollection?.userInterfaceStyle != traitCollection.userInterfaceStyle {
-            setupUI()
-            self.isHidden = false
+            updateUI()
         }
     }
 
-    // MARK: - Internal functions
-
-    internal func move(emojiFrame: CGRect, animation: Bool = true) {
-        let emojiPopLocation = CGPoint(
-            x: emojiFrame.origin.x - ((TopPartSize.width - BottomPartSize.width) / 2.0) + PartSpacing * 2.0,
-            y: emojiFrame.origin.y - TopPartSize.height - PartSpacing * 2.0
-        )
-
-        move(location: emojiPopLocation, animation: animation)
-    }
-    
-    internal func move(location: CGPoint, animation: Bool = true) {
-        locationX = location.x
-        setupUI()
-
-        var locationY = location.y
-        // 平移+翻转视图
-        if location.y < -12 {
-            locationY += TopPartSize.height + PartSpacing * 2.0
-            self.transform = CGAffineTransform(scaleX: 1, y: -1)
-            self.emojisView.transform = CGAffineTransform(scaleX: 1, y: -1)
-        } else {
-            self.transform = .identity
-            self.emojisView.transform = .identity
-        }
-
-        self.alpha = 0
-        UIView.animate(withDuration: animation ? 0.08 : 0, animations: {
-            self.alpha = 1
-            self.frame = CGRect(x: location.x, y: locationY, width: self.frame.width, height: self.frame.height)
-        }, completion: { complate in
-            self.isHidden = false
-        })
-    }
-    
-    internal func dismiss() {
-        UIView.animate(withDuration: 0.08, animations: {
-            self.alpha = 0
-        }, completion: { complate in
-            self.isHidden = true
-            self.currentEmoji = ""
-            self.emojiArray = []
-        })
-    }
-    
-    internal func setEmoji(_ emoji: Emoji) {
-        self.currentEmoji = emoji.selectedEmoji ?? emoji.emoji
-        self.emojiArray = emoji.emojis
-    }
-
-    internal func needRefreshEmoji(_ emoji: Emoji) -> Bool {
-        if let selectedEmoji = emoji.selectedEmoji {
-            return self.currentEmoji != selectedEmoji
-        }
-        return self.currentEmoji != emoji.emoji
-    }
-
-}
-
-// MARK: - Private functions
-
-extension EmojiPopView {
-    
-    private func createEmojiButton(_ emoji: String) -> UIButton {
-        let button = UIButton(type: .custom)
-        button.titleLabel?.font = EmojiFont
-        button.setTitle(emoji, for: .normal)
-        button.frame = CGRect(x: CGFloat(emojiButtons.count) * EmojiSize.width, y: 0, width: EmojiSize.width, height: EmojiSize.height)
-        button.addTarget(self, action: #selector(selectEmojiType(_:)), for: .touchUpInside)
-        button.isUserInteractionEnabled = true
-        return button
-    }
-    
     @objc private func selectEmojiType(_ sender: UIButton) {
         if let selectedEmoji = sender.titleLabel?.text {
             currentEmoji = selectedEmoji
             delegate?.emojiPopViewShouldDismiss(emojiPopView: self)
         }
     }
-    
-    private func setupUI() {
-        isHidden = true
-        
-        self.layer.sublayers?.forEach { $0.removeFromSuperlayer() }
 
+    // MARK: - UI
+
+    private func setupEmojisView() {
+        addSubview(emojisView)
+    }
+
+    func updateUI() {
         if emojiArray.count == 1 {
             emojisWidth = TopPartSize.width
             emojisX = (TopPartSize.width - EmojiSize.width) / 2.0
@@ -178,6 +100,17 @@ extension EmojiPopView {
                 emojisX += (halfWidth + BottomPartSize.width) - (emojisX + emojisWidth)
             }
         }
+
+        updateLayer()
+        updateEmojisView()
+   }
+
+    private var borderLayer: CAShapeLayer?
+    private var contentLayer: CALayer?
+    private func updateLayer() {
+        // remove old layers
+        borderLayer?.removeFromSuperlayer()
+        contentLayer?.removeFromSuperlayer()
 
         // path
         let path = maskPath()
@@ -198,45 +131,22 @@ extension EmojiPopView {
         borderLayer.fillColor = color.cgColor
         borderLayer.lineWidth = 0
         layer.addSublayer(borderLayer)
-        
+        self.borderLayer = borderLayer
+
         // mask
         let maskLayer = CAShapeLayer()
         maskLayer.path = path
-        
+
         // content layer
         let contentLayer = CALayer()
         contentLayer.frame = bounds
         contentLayer.backgroundColor = color.cgColor
         contentLayer.mask = maskLayer
         layer.addSublayer(contentLayer)
-        
-        emojisView.removeFromSuperview()
-        emojisView.frame = CGRect(
-            x: emojisX,
-            y: PartSpacing * 2.0,
-            width: emojisWidth,
-            height: EmojiSize.height
-        )
-        emojisView.contentSize = CGSize(
-            width: CGFloat(emojiArray.count) * EmojiSize.width,
-            height: EmojiSize.height
-        )
-        emojisView.contentOffset = .zero
-
-        emojisView.subviews.forEach { $0.removeFromSuperview() }
-
-        // add buttons
-        emojiButtons = []
-        for emoji in emojiArray {
-            let button = createEmojiButton(emoji)
-            emojiButtons.append(button)
-            emojisView.addSubview(button)
-        }
-        
-        addSubview(emojisView)
+        self.contentLayer = contentLayer
     }
-    
-    func maskPath() -> CGMutablePath {
+
+    private func maskPath() -> CGMutablePath {
         let path = CGMutablePath()
 
         var x = emojisX
@@ -267,4 +177,47 @@ extension EmojiPopView {
         
         return path
     }
+
+    private func updateEmojisView() {
+        bringSubviewToFront(emojisView)
+        // emojis view
+        emojisView.frame = CGRect(
+            x: emojisX,
+            y: PartSpacing * 2.0,
+            width: emojisWidth,
+            height: EmojiSize.height
+        )
+        emojisView.contentSize = CGSize(
+            width: CGFloat(emojiArray.count) * EmojiSize.width,
+            height: EmojiSize.height
+        )
+        emojisView.contentOffset = .zero
+
+        emojisView.subviews.forEach { $0.removeFromSuperview() }
+
+        // add buttons
+        emojiButtons = []
+        for emoji in emojiArray {
+            let button = createEmojiButton(emoji)
+            emojiButtons.append(button)
+            emojisView.addSubview(button)
+        }
+    }
+
+    private func createEmojiButton(_ emoji: String) -> UIButton {
+        let button = UIButton(type: .custom)
+        button.titleLabel?.font = EmojiFont
+        button.setTitle(emoji, for: .normal)
+        button.frame = CGRect(x: CGFloat(emojiButtons.count) * EmojiSize.width, y: 0, width: EmojiSize.width, height: EmojiSize.height)
+        button.addTarget(self, action: #selector(selectEmojiType(_:)), for: .touchUpInside)
+        button.isUserInteractionEnabled = true
+        return button
+    }
+
+    lazy var emojisView: UIScrollView = {
+        let view = UIScrollView()
+        view.showsHorizontalScrollIndicator = false
+        view.showsVerticalScrollIndicator = false
+        return view
+    }()
 }
