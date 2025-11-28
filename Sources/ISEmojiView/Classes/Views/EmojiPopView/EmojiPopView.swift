@@ -82,7 +82,9 @@ internal class EmojiPopView: UIView {
     }
 
     func updateUI() {
-        if emojiArray.count == 1 {
+        if emojiArray.count == 0 {
+            return
+        } else if emojiArray.count == 1 {
             emojisWidth = TopPartSize.width
             emojisX = (TopPartSize.width - EmojiSize.width) / 2.0
         } else {
@@ -148,6 +150,11 @@ internal class EmojiPopView: UIView {
 
     private func maskPath() -> CGMutablePath {
         let path = CGMutablePath()
+
+        // width 0 means not valid
+        guard emojisWidth > 0 else {
+            return path
+        }
 
         var x = emojisX
         if emojiArray.count == 1 {
